@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:10-alpine
+    restart: unless-stopped
+    container_name: user_db
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres    
+    volumes: 
+      - db-dev:/var/lib/postgresql/data
+    networks:
+      - bla-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    container_name: user_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "valverde.thiago@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "Pauca!2022"
+    ports:
+      - "8082:80"
+    depends_on:
+      - postgres
+    networks:
+      - bla-network
+
+networks:
+  bla-network:
+      driver: bridge
+
+volumes:
+  db-dev:
+    driver: local
