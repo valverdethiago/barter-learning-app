@@ -2,7 +2,7 @@ package br.com.vsconsulting.barter.api;
 
 import br.com.vsconsulting.barter.model.auth.AuthRequestModel;
 import br.com.vsconsulting.barter.model.auth.JwtTokenModel;
-import br.com.vsconsulting.barter.service.UserService;
+import br.com.vsconsulting.barter.service.impl.UserServiceImpl;
 import br.com.vsconsulting.barter.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
 
   @Autowired
-  private UserService userService;
+  private UserServiceImpl userService;
   @Autowired
   private AuthenticationManager authenticationManager;
   @Autowired
