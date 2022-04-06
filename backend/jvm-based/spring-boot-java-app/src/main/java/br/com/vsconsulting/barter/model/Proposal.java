@@ -28,7 +28,7 @@ public class Proposal {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
   @ManyToMany
-  @JoinTable(name = "proprosal_offered_items",
+  @JoinTable(name = "proposal_offered_items",
              joinColumns =@JoinColumn(name="itemId"),
              inverseJoinColumns = @JoinColumn(name="proposalId"))
   private Set<Item> offeredItems;
