@@ -12,7 +12,7 @@ public class ProposalController {
   private ProposalService service;
 
   @PostMapping("/proposal/${id}/approve")
-  public ResponseEntity approve(String id) {
+  public ResponseEntity approve(Integer id) {
     try {
       service.approve(id);
       return ResponseEntity.ok().build();
