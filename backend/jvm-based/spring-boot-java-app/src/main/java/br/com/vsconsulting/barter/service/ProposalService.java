@@ -14,32 +14,58 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 @Service
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ProposalService {
 
-  @Autowired
-  private ProposalRepository repository;
-  @Autowired
-  private ItemRepository itemRepository;
-  @Autowired
-  private MessageSource messageSource;
+  private final ProposalRepository repository;
+  private final ItemRepository itemRepository;
+  private final MessageSource messageSource;
+  private final UserService userService;
 
+  public void createOrUpdate(Proposal proposal) {
+      validateItems(proposal);
+      this.validateItemsOwner(proposal.getOfferedItems(),
+          "proposal.invalid.status.offered.items.with.different.owners");
+      this.validateItemsAreFromTheOriginalUser(proposal);
+      this.validateItemsOwner(proposal.getRequestedItems(),
+          "proposal.invalid.status.target.items.with.different.owners");
+      validateProposalBelongsToUserLoggedIn(proposal);
+  }
 
   public void approve(Integer id) {
     Proposal proposal = findById(id);
     validateProposalStatus(proposal);
-    validateItems(proposal);
-    User offeredUser = this.validateAndGetItemsOwner(proposal.getOfferedItems(),
-        "proposal.invalid.status.offered.items.with.different.owners");
-    User targetUser = this.validateAndGetItemsOwner(proposal.getTargetItems(),
-        "proposal.invalid.status.target.items.with.different.owners");
-    changeItemOwners(proposal, offeredUser, targetUser);
+    validateProposalBelongsToUserLoggedIn(proposal);
+    persistDatabaseOperations(proposal);
+  }
+
+  private void persistDatabaseOperations(Proposal proposal) {
+    changeItemOwners(proposal);
     changeProposalStatus(proposal);
+  }
+
+  private void validateProposalBelongsToUserLoggedIn(Proposal proposal) {
+    User userLoggedIn = userService.getUserLoggedIn().get();
+    if (!userLoggedIn.equals(proposal.getOwner())) {
+      throw new InvalidProposalStatusException(messageSource
+          .getMessage("proposal.invalid.status.proposal.does.not.belong.to.the.user",
+              null, Locale.getDefault()));
+    }
+  }
+
+  private void validateItemsAreFromTheOriginalUser(Proposal proposal) {
+    proposal.getRequestedItems().stream().filter(item -> !item.getOwner().equals(proposal.getRequestedItems()))
+        .findAny().ifPresent(s->
+        new InvalidProposalStatusException(messageSource
+            .getMessage("proposal.invalid.status.item.does.not.belong.to.the.user",
+                new Object[]{s.getName()}, Locale.getDefault())));
   }
 
   private void validateItems(Proposal proposal) {
@@ -48,7 +74,7 @@ public class ProposalService {
           .getMessage("proposal.invalid.status.blank.offered.items", null,
               Locale.getDefault()));
     }
-    if (CollectionUtils.isEmpty(proposal.getTargetItems())) {
+    if (CollectionUtils.isEmpty(proposal.getRequestedItems())) {
       throw new InvalidProposalStatusException(
           messageSource.getMessage("proposal.invalid.status.blank.target.items", null,
               Locale.getDefault()));
@@ -56,18 +82,14 @@ public class ProposalService {
 
   }
 
-  private User validateAndGetItemsOwner(Set<Item> items, String exceptionMessageCode) {
-    Map<User, List<Item>> offeredItemsByOwner = items.stream()
+  private void validateItemsOwner(Set<Item> items, String exceptionMessageCode) {
+    Map<User, List<Item>> itemsByOwner = items.stream()
         .collect(Collectors.groupingBy(Item::getOwner));
-    if (offeredItemsByOwner.entrySet().size() > 1) {
+    if (itemsByOwner.entrySet().size() > 1) {
       throw new InvalidProposalStatusException(
           messageSource.getMessage(exceptionMessageCode,
               null, Locale.getDefault()));
     }
-    return offeredItemsByOwner.entrySet().stream().findFirst().orElseThrow(() ->
-        new InvalidProposalStatusException(
-            messageSource.getMessage(exceptionMessageCode,null, Locale.getDefault())))
-        .getKey();
   }
 
   private Proposal findById(Integer id) {
@@ -80,10 +102,10 @@ public class ProposalService {
     this.changeProposalStatus(proposal, ProposalStatus.DONE);
   }
 
-  private void changeItemOwners(Proposal proposal, User offeringUser, User targetUser) {
-    proposal.getOfferedItems().stream().forEach( item -> item.setOwner(targetUser));
-    proposal.getTargetItems().stream().forEach( item -> item.setOwner(offeringUser));
-    Set<Item> allItems = Stream.of(proposal.getTargetItems(), proposal.getOfferedItems())
+  private void changeItemOwners(Proposal proposal) {
+    proposal.getOfferedItems().stream().forEach( item -> item.setOwner(proposal.getRequestingUser()));
+    proposal.getRequestedItems().stream().forEach( item -> item.setOwner(proposal.getOwner()));
+    Set<Item> allItems = Stream.of(proposal.getRequestedItems(), proposal.getOfferedItems())
         .flatMap(x -> x.stream())
         .collect(Collectors.toSet());
     itemRepository.saveAll(allItems);
