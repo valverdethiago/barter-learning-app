@@ -25,6 +25,8 @@ public class Item {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
   private BigDecimal price;
+  private String name;
+  private String description;
   @ManyToOne
   @JoinColumn(name = "ownerId")
   private User owner;
