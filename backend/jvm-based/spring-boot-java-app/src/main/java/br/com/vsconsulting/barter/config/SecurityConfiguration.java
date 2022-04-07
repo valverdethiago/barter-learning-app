@@ -1,11 +1,9 @@
 package br.com.vsconsulting.barter.config;
 
 import br.com.vsconsulting.barter.filter.JwtTokenFilter;
-import br.com.vsconsulting.barter.service.UserService;
-import javax.servlet.http.HttpServletResponse;
+import br.com.vsconsulting.barter.service.impl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
   @Autowired
-  private UserService userService;
+  private UserServiceImpl userService;
   @Autowired
   private JwtTokenFilter jwtTokenFilter;
 

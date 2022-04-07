@@ -10,6 +10,7 @@ services:
       - POSTGRES_PASSWORD=postgres    
     volumes: 
       - db-dev:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
     networks:
       - bla-network
 
