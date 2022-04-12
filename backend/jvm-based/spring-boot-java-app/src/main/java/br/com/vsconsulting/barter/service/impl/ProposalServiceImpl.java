@@ -29,6 +29,7 @@ public class ProposalServiceImpl implements br.com.vsconsulting.barter.service.P
   private final MessageSource messageSource;
   private final UserServiceImpl userService;
 
+
   @Override
   public void createOrUpdate(Proposal proposal) {
     validateProposalBelongsToUserLoggedIn(proposal);
@@ -37,7 +38,8 @@ public class ProposalServiceImpl implements br.com.vsconsulting.barter.service.P
         "proposal.invalid.status.offered.items.with.different.owners");
     this.validateItemsOwner(proposal.getRequestedItems(),
         "proposal.invalid.status.target.items.with.different.owners");
-    this.validateItemsAreFromTheOriginalUser(proposal);
+    this.validateItemsAreFromTheOriginalUser(proposal.getOfferedItems(), proposal.getRequestingUser());
+    this.validateItemsAreFromTheOriginalUser(proposal.getRequestedItems(), proposal.getOwner());
   }
 
   @Override
@@ -62,9 +64,9 @@ public class ProposalServiceImpl implements br.com.vsconsulting.barter.service.P
     }
   }
 
-  private void validateItemsAreFromTheOriginalUser(Proposal proposal) {
-    proposal.getOfferedItems().stream()
-        .filter(item -> !item.getOwner().equals(proposal.getRequestedItems()))
+  private void validateItemsAreFromTheOriginalUser(Set<Item> items, User owner) {
+    items.stream()
+        .filter(item -> !item.getOwner().equals(owner))
         .findAny().ifPresent(s -> {
           throw new InvalidProposalStatusException(messageSource
               .getMessage("proposal.invalid.status.item.does.not.belong.to.the.user",

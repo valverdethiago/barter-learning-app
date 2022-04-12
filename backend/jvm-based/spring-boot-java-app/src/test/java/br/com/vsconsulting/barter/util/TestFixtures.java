@@ -2,9 +2,13 @@ package br.com.vsconsulting.barter.util;
 
 import br.com.vsconsulting.barter.model.Item;
 import br.com.vsconsulting.barter.model.User;
+import br.com.vsconsulting.barter.model.auth.AuthRequestModel;
+import com.github.javafaker.Faker;
 import java.util.Random;
 
 public class TestFixtures {
+
+  private static Faker FAKER = new Faker();
 
   public static final User USER_CARLOS = User.builder()
       .id(new Random().nextInt())
@@ -28,6 +32,17 @@ public class TestFixtures {
       .name("Apple Airpods")
       .description("Apple Airpods")
       .owner(USER_JOAO)
+      .build();
+
+  public static final AuthRequestModel FAKE_REQUEST_MODEL = AuthRequestModel.builder()
+      .username(FAKER.name().username())
+      .password(FAKER.internet().password())
+      .build();
+
+  public static final User FAKE_USER = User.builder()
+      .username(FAKER.name().username())
+      .name(FAKER.name().fullName())
+      .email(FAKER.internet().emailAddress())
       .build();
 
 }
