@@ -1,12 +1,8 @@
 package br.com.vsconsulting.barter.filter;
 
-import static org.springframework.util.ObjectUtils.isEmpty;
-
 import br.com.vsconsulting.barter.util.JwtTokenUtil;
-import com.google.common.net.HttpHeaders;
 import io.jsonwebtoken.ExpiredJwtException;
 import java.io.IOException;
-import java.util.List;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
