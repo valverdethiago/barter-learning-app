@@ -8,6 +8,7 @@ import br.com.vsconsulting.barter.model.ProposalStatus;
 import br.com.vsconsulting.barter.model.User;
 import br.com.vsconsulting.barter.repository.ItemRepository;
 import br.com.vsconsulting.barter.repository.ProposalRepository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -29,6 +30,7 @@ public class ProposalServiceImpl implements br.com.vsconsulting.barter.service.P
   private final MessageSource messageSource;
   private final UserServiceImpl userService;
 
+
   @Override
   public void createOrUpdate(Proposal proposal) {
     validateProposalBelongsToUserLoggedIn(proposal);
@@ -37,7 +39,8 @@ public class ProposalServiceImpl implements br.com.vsconsulting.barter.service.P
         "proposal.invalid.status.offered.items.with.different.owners");
     this.validateItemsOwner(proposal.getRequestedItems(),
         "proposal.invalid.status.target.items.with.different.owners");
-    this.validateItemsAreFromTheOriginalUser(proposal);
+    this.validateItemsAreFromTheOriginalUser(proposal.getOfferedItems(), proposal.getRequestingUser());
+    this.validateItemsAreFromTheOriginalUser(proposal.getRequestedItems(), proposal.getOwner());
   }
 
   @Override
@@ -46,6 +49,11 @@ public class ProposalServiceImpl implements br.com.vsconsulting.barter.service.P
     validateProposalStatus(proposal);
     validateProposalBelongsToUserLoggedIn(proposal);
     changeItemsOwners(proposal);
+  }
+
+  @Override
+  public Set<Proposal> getByUser(User user) {
+    return repository.getByUser(user);
   }
 
   private void changeItemsOwners(Proposal proposal) {
@@ -62,9 +70,9 @@ public class ProposalServiceImpl implements br.com.vsconsulting.barter.service.P
     }
   }
 
-  private void validateItemsAreFromTheOriginalUser(Proposal proposal) {
-    proposal.getOfferedItems().stream()
-        .filter(item -> !item.getOwner().equals(proposal.getRequestedItems()))
+  private void validateItemsAreFromTheOriginalUser(Set<Item> items, User owner) {
+    items.stream()
+        .filter(item -> !item.getOwner().equals(owner))
         .findAny().ifPresent(s -> {
           throw new InvalidProposalStatusException(messageSource
               .getMessage("proposal.invalid.status.item.does.not.belong.to.the.user",
@@ -97,9 +105,7 @@ public class ProposalServiceImpl implements br.com.vsconsulting.barter.service.P
   }
 
   private Proposal findById(Integer id) {
-    return repository.findById(id).orElseThrow(
-        () -> new EntityNotFoundException()
-    );
+    return repository.findById(id).orElseThrow(EntityNotFoundException::new);
   }
 
   private void changeProposalStatus(Proposal proposal) {
@@ -107,11 +113,11 @@ public class ProposalServiceImpl implements br.com.vsconsulting.barter.service.P
   }
 
   private void changeItemOwners(Proposal proposal) {
-    proposal.getOfferedItems().stream()
+    proposal.getOfferedItems()
         .forEach(item -> item.setOwner(proposal.getRequestingUser()));
-    proposal.getRequestedItems().stream().forEach(item -> item.setOwner(proposal.getOwner()));
+    proposal.getRequestedItems().forEach(item -> item.setOwner(proposal.getOwner()));
     Set<Item> allItems = Stream.of(proposal.getRequestedItems(), proposal.getOfferedItems())
-        .flatMap(x -> x.stream())
+        .flatMap(Collection::stream)
         .collect(Collectors.toSet());
     itemRepository.saveAll(allItems);
   }

@@ -1,15 +1,17 @@
 package br.com.vsconsulting.barter.service;
 
+import static br.com.vsconsulting.barter.util.TestFixtures.CARLOS_BROKEN_IPHONE_8;
+import static br.com.vsconsulting.barter.util.TestFixtures.JOAO_APPLE_AIRPODS;
+import static br.com.vsconsulting.barter.util.TestFixtures.USER_CARLOS;
+import static br.com.vsconsulting.barter.util.TestFixtures.USER_JOAO;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import br.com.vsconsulting.barter.exception.InvalidProposalStatusException;
 import br.com.vsconsulting.barter.model.Item;
 import br.com.vsconsulting.barter.model.Proposal;
 import br.com.vsconsulting.barter.model.ProposalStatus;
-import br.com.vsconsulting.barter.model.User;
 import br.com.vsconsulting.barter.repository.ItemRepository;
 import br.com.vsconsulting.barter.repository.ProposalRepository;
 import br.com.vsconsulting.barter.service.impl.ProposalServiceImpl;
@@ -28,14 +30,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.MessageSource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static br.com.vsconsulting.barter.util.TestFixtures.*;
-
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 class ProposalServiceTest {
 
   @Autowired
-  private ProposalServiceImpl service;
+  private ProposalService service;
   @Autowired
   private MessageSource messageSource;
 
